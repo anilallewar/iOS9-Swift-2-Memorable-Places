@@ -15,6 +15,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     
     @IBOutlet var mapView: MKMapView!
     
+    
+    @IBOutlet var activityIndicatorView: UIActivityIndicatorView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -60,12 +63,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             
             let longPressCoordinate = mapView.convertPoint(touchPoint, toCoordinateFromView: self.mapView)
             
-            let annotation = MKPointAnnotation()
-            annotation.title = "Memorable Place"
-            annotation.coordinate = longPressCoordinate
-            
-            mapView.addAnnotation(annotation)
-            
             let currentPlace:PlacesData = PlacesData()
             currentPlace.setCoordinates(longPressCoordinate)
             
@@ -80,30 +77,68 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     private func getAddressFromCoordinate(currentPlace:PlacesData) -> Void {
         let location:CLLocation = CLLocation(latitude: currentPlace.getCoordinates().latitude, longitude: currentPlace.getCoordinates().longitude)
         
+        // Start spinner
+        self.activityIndicatorView.startAnimating()
+        
         CLGeocoder().reverseGeocodeLocation(location, completionHandler: { (placemarks, error) -> Void in
             var messageText:String = ""
             if (error != nil) {
-                messageText = "\n" + "Reverse Geocode failed with error: " + (error?.localizedDescription)!
+                messageText = "Reverse Geocode failed with error: " + (error?.localizedDescription)!
             } else if let placemark = CLPlacemark?(placemarks![0]) {
                 
-                messageText = "\n" + "Address: "
                 if let street = placemark.thoroughfare {
                     messageText += street
                 }
+                
                 if let subStreet = placemark.subThoroughfare {
-                    messageText += ", " + subStreet
+                    if messageText.characters.count > 0 {
+                        messageText += ", " + subStreet
+                    } else {
+                        messageText = subStreet
+                    }
                 }
                 
-                messageText += ", " + placemark.locality! + ", " + placemark.administrativeArea! + ", "
-                    + placemark.postalCode!
+                if let locality = placemark.locality {
+                    if messageText.characters.count > 0 {
+                        messageText += ", " + locality
+                    } else {
+                        messageText = locality
+                    }
+                }
+                
+                if let administrativeArea = placemark.administrativeArea {
+                    if messageText.characters.count > 0 {
+                        messageText += ", " + administrativeArea
+                    } else {
+                        messageText = administrativeArea
+                    }
+                }
+                
+                if let postalCode = placemark.postalCode {
+                    if messageText.characters.count > 0 {
+                        messageText += ", " + postalCode
+                    } else {
+                        messageText = postalCode
+                    }
+                }
+                
             } else {
                 messageText = "Can't find the location"
             }
+            
+            let annotation = MKPointAnnotation()
+            annotation.title = messageText
+            annotation.coordinate = currentPlace.getCoordinates()
+            
+            self.mapView.addAnnotation(annotation)
             
             currentPlace.setAddress(messageText)
             
             //Add it to the array in the table view controller
             placesArray.append(currentPlace)
+            
+            // Stop spinner
+            self.activityIndicatorView.stopAnimating()
         })
     }
     

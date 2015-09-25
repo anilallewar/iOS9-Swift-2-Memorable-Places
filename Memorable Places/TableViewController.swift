@@ -60,11 +60,8 @@ class TableViewController: UITableViewController {
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath)
 
-        // Configure the cell...
-        print("The address at \(indexPath.row) is :"  + placesArray[indexPath.row].getAddress())
-        
-        // getAddress() doesn't show anything
-        cell.textLabel?.text = String(placesArray[indexPath.row].getCoordinates())
+        // By default, the table cell only shows 1 line; hence placing \n at the start of the address would mean that actual address is not shown
+        cell.textLabel?.text = placesArray[indexPath.row].getAddress()
 
         return cell
     }
